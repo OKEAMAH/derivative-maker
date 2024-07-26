@@ -11,6 +11,7 @@
     - name: Create ansible user
       user:
         name: ansible
+        groups: sudo
 
     - name: Create ansible user ssh directory
       file:
@@ -29,13 +30,22 @@
         mode: 0600
         remote_src: true
 
-    - name: Allow passwordless sudo commands
-      community.general.sudoers:
-        name: ansible-passwordless-sudo
+    # - name: Allow passwordless sudo commands
+    #   community.general.sudoers:
+    #     name: ansible-passwordless-sudo
+    #     state: present
+    #     user: ansible
+    #     commands: ALL
+    #     nopassword: true
+
+    - name: Allow sudo group to use sudo without password
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers.d/user-passwordless-ansible
         state: present
-        user: ansible
-        commands: ALL
-        nopassword: true
+        create: yes
+        line: '%sudo ALL=(ALL:ALL) NOPASSWD:ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+        mode: '0440'
 
     - name: Add host to hosts file
       lineinfile:

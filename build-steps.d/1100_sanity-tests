@@ -128,6 +128,15 @@ check-hostname() {
    true "INFO: /etc/hostname check ok."
 }
 
+check-mailname() {
+   ## Silence noisy pbuilder warning:
+   ## W: No local /etc/mailname to copy, relying on /var/cache/pbuilder/cow.cow_amd64/cow.950654/etc/mailname to be correct
+   if ! test -f /etc/mailname ; then
+      true "INFO: File /etc/mailname did not exist. Creating empty one...."
+      $SUDO_TO_ROOT touch /etc/mailname
+   fi
+}
+
 check-source-folder-permissions() {
    ## Debugging.
    true "${bold}${cyan}INFO: PWD: $PWD ${reset}"
@@ -161,7 +170,11 @@ check-stray-loop-devices() {
       return 0
    fi
 
-   error "Stray loop devices detected!
+   ## TODO: ignore /var/swapfile loop device
+   ## losetup_output:
+   ## /dev/loop0: [64769]:2097454 (/var/swapfile)
+
+   true "INFO: Stray loop devices detected!
 
 losetup_output: '$losetup_output'
 
@@ -175,7 +188,7 @@ expected result:
 In other words, this build script as currently implemented expects that there are no open loop devices.
 'sudo losetup --all' should not have any output and exit with exit code 0.
 
-If there is a legitimate loop device that should be ignored in this text, please report a bug.
+If there is a legitimate loop device, this message can be ignored.
 
 Potential causes:
 - A previously broken or aborted build might result in a stray loop device.
@@ -341,6 +354,7 @@ main() {
    check-sudo "$@"
    check-dpkg "$@"
    check-hostname "$@"
+   check-mailname "$@"
    check-source-folder-permissions "$@"
    check-stray-loop-devices "$@"
    check-stray-mounts "$@"
